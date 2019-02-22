@@ -106,7 +106,7 @@ def weighted_avg(t, mask=None, axis=None, expand_mask=False):
     return tf.reduce_sum(
         tf.multiply(t, mask), axis=axis) / tf.reduce_sum(
             mask, axis=axis)
-
+    
 
 def build_genie_model(feat_dict,
                       cfg,
@@ -135,7 +135,47 @@ def build_genie_model(feat_dict,
   pitches = util.demidify(feat_dict["midi_pitches"])
   velocities = feat_dict["velocities"]
   pitches_scalar = ((tf.cast(pitches, tf.float32) / 87.) * 2.) - 1.
-
+  
+  # CS230 Update
+  # Initialize chord tables
+  if ("chordprog" in cfg.enc_aux_feats) or ("chordprog" in cfg.dec_aux_feats):
+    chord_keys = feat_dict["chord_dict"]["PITCH_CLASS_NAMES"]
+    chord_types = feat_dict["chord_dict"]["CHORD_KINDS"]
+    
+    table_chord_keys = tf.contrib.lookup.HashTable(
+            tf.contrib.lookup.KeyValueTensorInitializer(chord_keys,
+                                    tf.range(0, len(chord_keys))),
+                                    default_value = 0, name = 'chordkeys')
+    table_chord_types = tf.contrib.lookup.HashTable(
+            tf.contrib.lookup.KeyValueTensorInitializer(chord_types,
+                                    tf.range(0, len(chord_types))),
+                                    default_value = 0, name = 'chordtypes')
+    tf.tables_initializer().run()
+    
+    # CS230 Update
+    def chordsOneHot(features, table_chord_keys, table_chord_types):
+      # Takes chord data in features and applies one-hot enconding
+      # Inputs:
+      #   features: features from load_noteseqs(...)
+      #   table_chord_keys: table linking chord keys to integers
+      #   table_chord_types: table linking chord types to integers
+      #
+      # Outputs:
+      #   One-hot-conded tensor of [feats_chord_keys, feats_chord_types]
+      
+      chord_keys = features["chord_dict"]["PITCH_CLASS_NAMES"]
+      chord_types = features["chord_dict"]["CHORD_KINDS"]
+      chord_features = features["chords"] # tuple per note per example is
+                                          # ('key', 'type')
+      chord_keys_onehot = tf.one_hot(table_chord_keys.lookup(
+                                     chord_features[:,:,0]),
+                                     depth = len(chord_keys) + 1)
+      chord_types_onehot = tf.one_hot(table_chord_types.lookup(
+                                      chord_features[:,:,1]),
+                                      depth = len(chord_types) + 1)
+      
+      return chord_keys_onehot.append(chord_types_onehot)
+  
   # Create sequence lens
   if is_training and cfg.train_randomize_seq_len:
     seq_lens = tf.random_uniform(
@@ -170,6 +210,12 @@ def build_genie_model(feat_dict,
     if "velocities" in cfg.enc_aux_feats:
       enc_feats.append(
           tf.one_hot(velocities, cfg.data_max_discrete_velocities + 1))
+    
+    # CS230 Update
+    if "chordprog" in cfg.enc_aux_feats:
+      enc_feats.append(
+          chordsOneHot(feat_dict, table_chord_keys, table_chord_types))
+    
     enc_feats = tf.concat(enc_feats, axis=2)
 
     with tf.variable_scope("encoder"):
@@ -423,6 +469,10 @@ def build_genie_model(feat_dict,
     dec_feats.append(
         tf.one_hot(feat_dict["velocities"],
                    cfg.data_max_discrete_velocities + 1))
+  # CS230 Update
+  if "chordprog" in cfg.dec_aux_feats:
+      enc_feats.append(
+          chordsOneHot(feat_dict, table_chord_keys, table_chord_types))
 
   assert dec_feats
   dec_feats = tf.concat(dec_feats, axis=2)

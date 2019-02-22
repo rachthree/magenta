@@ -217,6 +217,27 @@ class StpIqAuto(BasePianoGenieConfig):
     self.stp_emb_iq = True
     self.dec_autoregressive = True
 
+# CS230 Update
+class StpIqAutoDt(BasePianoGenieConfig):
+
+  def __init__(self):
+    super(StpIqAutoDt, self).__init__()
+
+    self.stp_emb_iq = True
+    self.dec_autoregressive = True
+    self.enc_aux_feats = ["delta_times_int"]
+    self.dec_aux_feats = ["delta_times_int"]
+
+# CS230 Update    
+class StpIqAutoDtCP(BasePianoGenieConfig):
+
+  def __init__(self):
+    super(StpIqAutoDtCP, self).__init__()
+
+    self.stp_emb_iq = True
+    self.dec_autoregressive = True 
+    self.enc_aux_feats = ["delta_times_int", "chordprog"]
+    self.dec_aux_feats = ["delta_times_int", "chordprog"]
 
 class SeqVaeAuto(BasePianoGenieConfig):
 
@@ -371,7 +392,7 @@ class StpVqSeqFreeAutoDtVs(BasePianoGenieConfig):
     self.dec_autoregressive = True
     self.dec_aux_feats = ["delta_times_int", "velocities"]
 
-
+# CS230 Update
 _named_configs = {
     "stp_free": StpFree(),
     "stp_vq": StpVq(),
@@ -387,6 +408,8 @@ _named_configs = {
     "auto_no_enc": Auto(),
     "stp_vq_auto": StpVqAuto(),
     "stp_iq_auto": StpIqAuto(),
+    "stp_iq_auto_dt": StpIqAutoDt(),
+    "stp_iq_auto_dt_cp": StpIqAutoDtCP(),
     "seq_vae_auto": SeqVaeAuto(),
     "lor_free_auto": LorFreeAuto(),
     "stp_vq_seq_vae_auto": StpVqSeqVaeAuto(),

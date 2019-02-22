@@ -32,7 +32,10 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string("dataset_fp", "./data/train*.tfrecord",
                     "Path to dataset containing TFRecords of NoteSequences.")
 flags.DEFINE_string("train_dir", "", "The directory for this experiment")
-flags.DEFINE_string("model_cfg", "stp_iq_auto", "Hyperparameter configuration.")
+
+# CS230 Update
+flags.DEFINE_string("model_cfg", "stp_iq_auto_dt_cp", "Hyperparameter configuration.")
+
 flags.DEFINE_string("model_cfg_overrides", "",
                     "E.g. rnn_nlayers=4,rnn_nunits=256")
 flags.DEFINE_integer("summary_every_nsecs", 60,
