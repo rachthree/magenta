@@ -1,5 +1,5 @@
 ## Introduction
-This folder contains the files specific to the CS230, Winter 19 Project. The project aims to modify Piano Genie to take in a chord progression and button contour to provide a more musically structured output.
+This folder contains the files specific to the Stanford University CS230, Winter 2019 Project. The project aims to modify Piano Genie to take in a chord progression and button contour to provide a more musically structured output.
 
 Files in this folder are generally documentation and datasets.
 
@@ -12,6 +12,8 @@ New and modified Magenta code are linked below:
 [Model](/magenta/models/piano_genie/model.py) - added the new configurations and capability to include chord progression features.
 
 [Training](/magenta/models/piano_genie/train.py) - proposed model is now default.
+
+
 
 The below code modifications are in progress:
 
