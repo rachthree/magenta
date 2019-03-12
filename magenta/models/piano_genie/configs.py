@@ -59,10 +59,10 @@ class BasePianoGenieConfig(object):
     self.stp_emb_iq = False
     self.stp_emb_iq_nbins = 8
     self.stp_emb_iq_contour_dy_scalar = False
-    self.stp_emb_iq_contour_margin = 0.
+    self.stp_emb_iq_contour_margin = 1.
     self.stp_emb_iq_contour_exp = 2
     self.stp_emb_iq_contour_comp = "product"
-    self.stp_emb_iq_deviate_exp = 2
+    self.stp_emb_iq_deviate_exp = 1
 
     # Unconstrained parameters... just like VAE but passed directly (no prior)
     self.seq_emb_unconstrained = False

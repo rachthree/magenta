@@ -1,0 +1,46 @@
+data_max_discrete_times,32
+data_max_discrete_velocities,16
+data_randomize_chord_order,False
+dec_autoregressive,True
+dec_aux_feats,['delta_times_int', 'chordprog']
+dec_pred_velocity,False
+enc_aux_feats,['delta_times_int', 'chordprog']
+enc_pitch_scalar,False
+enc_rnn_bidirectional,True
+eval_batch_size,32
+eval_seq_len,128
+lor_emb_n,16
+lor_emb_unconstrained,False
+lor_emb_unconstrained_embedding_dim,8
+rnn_celltype,lstm
+rnn_nlayers,2
+rnn_nunits,128
+seq_emb_unconstrained,False
+seq_emb_unconstrained_embedding_dim,64
+seq_emb_vae,False
+seq_emb_vae_embedding_dim,64
+stp_emb_iq,True
+stp_emb_iq_contour_comp,product
+stp_emb_iq_contour_dy_scalar,False
+stp_emb_iq_contour_exp,2
+stp_emb_iq_contour_margin,1.0
+stp_emb_iq_deviate_exp,1
+stp_emb_iq_nbins,8
+stp_emb_unconstrained,False
+stp_emb_unconstrained_embedding_dim,64
+stp_emb_vq,False
+stp_emb_vq_codebook_size,8
+stp_emb_vq_commitment_cost,0.25
+stp_emb_vq_embedding_dim,64
+train_augment_stretch_bounds,(0.95, 1.05)
+train_augment_transpose_bounds,(-6, 6)
+train_batch_size,32
+train_loss_iq_contour_scalar,1.0
+train_loss_iq_deviate_scalar,0.0
+train_loss_iq_range_scalar,1.0
+train_loss_vae_kl_scalar,1.0
+train_loss_vq_err_scalar,1.0
+train_lr,0.0003
+train_randomize_seq_len,False
+train_seq_len,128
+train_seq_len_min,1
