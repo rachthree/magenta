@@ -1617,19 +1617,23 @@ def infer_dense_chords_for_sequence(sequence,
       active_pitches = set(sorted_notes[idx].pitch for idx in active_notes)
       if len(active_pitches) >= min_notes_per_chord:
         # Infer a chord symbol for the active pitches.
+        figure = chord_symbols_lib.pitches_to_simple_chord_symbol(active_pitches)
 
-        # TODO: convert to 3 bit simpler form of chord
-        if figure != current_figure:
-          # Add a text annotation to the sequence.
-          text_annotation = sequence.text_annotations.add()
-          text_annotation.text = figure
-          text_annotation.annotation_type = CHORD_SYMBOL
-          if is_quantized_sequence(sequence):
-            text_annotation.time = (
-                current_time * sequence.quantization_info.steps_per_quarter)
-            text_annotation.quantized_step = current_time
-          else:
-            text_annotation.time = current_time
+        # If the chord is too complicated, use the last seen chord that could be
+        # simply expressed.
+        if figure == "":
+          figure = current_figure
+
+        # Add a text annotation to the sequence at each time change.
+        text_annotation = sequence.text_annotations.add()
+        text_annotation.text = figure
+        text_annotation.annotation_type = CHORD_SYMBOL
+        if is_quantized_sequence(sequence):
+          text_annotation.time = (
+              current_time * sequence.quantization_info.steps_per_quarter)
+          text_annotation.quantized_step = current_time
+        else:
+          text_annotation.time = current_time
 
         current_figure = figure
 
