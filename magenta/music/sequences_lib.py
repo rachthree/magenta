@@ -1617,7 +1617,6 @@ def infer_dense_chords_for_sequence(sequence,
       active_pitches = set(sorted_notes[idx].pitch for idx in active_notes)
       if len(active_pitches) >= min_notes_per_chord:
         # Infer a chord symbol for the active pitches.
-        figure = chord_symbols_lib.pitches_to_chord_symbol(active_pitches)
 
         # TODO: convert to 3 bit simpler form of chord
         if figure != current_figure:

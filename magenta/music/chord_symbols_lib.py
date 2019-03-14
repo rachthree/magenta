@@ -629,7 +629,6 @@ def pitches_to_chord_symbol(pitches):
     bass_str = _pitch_class_to_string(*_transpose_pitch_class('C', 0, bass))
     return '%s%s%s/%s' % (root_str, kind_str, modifications_str, bass_str)
 
-
 def chord_symbol_pitches(figure):
   """Return the pitch classes contained in a chord.
 
@@ -720,3 +719,24 @@ def chord_symbol_quality(figure):
     return CHORD_QUALITY_DIMINISHED
   else:
     return CHORD_QUALITY_OTHER
+
+
+def pitches_to_simple_chord_symbol(pitches):
+  """Return a simplified tuple representation of the chord.
+
+  Args:
+    figure: The chord symbol figure string for which quality is computed.
+
+  Returns:
+    Space-separated ints of the form "root quality", where root is a number from {0, 11}
+    and quality is 0 = major, 1 = minor, 2 = augmented, 3 = diminished. If the quality
+    is of unknown type (something more complex or undetermined), return empty string.
+  """
+  chord = pitches_to_chord_symbol(pitches)
+
+  root = chord_symbol_root(chord)
+  quality = chord_symbol_quality(chord)
+  if quality == CHORD_QUALITY_OTHER:
+    return ""
+
+  return (str(root) + " " + str(quality))
