@@ -1619,6 +1619,7 @@ def infer_dense_chords_for_sequence(sequence,
         # Infer a chord symbol for the active pitches.
         figure = chord_symbols_lib.pitches_to_chord_symbol(active_pitches)
 
+        # TODO: convert to 3 bit simpler form of chord
         if figure != current_figure:
           # Add a text annotation to the sequence.
           text_annotation = sequence.text_annotations.add()

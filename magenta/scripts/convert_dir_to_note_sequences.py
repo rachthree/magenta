@@ -30,6 +30,7 @@ from magenta.music import chord_inference
 from magenta.music import midi_io
 from magenta.music import musicxml_reader
 from magenta.music import note_sequence_io
+from magenta.music import sequences_lib
 import tensorflow as tf
 
 FLAGS = tf.app.flags.FLAGS
@@ -77,19 +78,12 @@ def convert_files(root_dir, sub_dir, writer, recursive=False, add_chords=False):
         full_file_path.lower().endswith('.midi')):
       try:
         sequence = convert_midi(root_dir, sub_dir, full_file_path)
-
         if add_chords:
-          # Infer chords for every note (naive v0 approach for CS230 project)
-          try:
-            # TODO: add beats
-            chord_inference.infer_chords_for_sequence(
-                sequence,
-                chord_change_prob=0.25,
-                chord_note_concentration=50.0,
-                add_key_signatures=True)
-          except chord_inference.ChordInferenceError:
-            # Metrics.counter('extract_examples', 'chord_inference_failed').inc()
-            return
+          sequences_lib.infer_dense_chords_for_sequence(
+                                    sequence,
+                                    instrument=None,
+                                    min_notes_per_chord=3)
+          tf.logging.info('Adding chords 3')
       except Exception as exc:  # pylint: disable=broad-except
         tf.logging.fatal('%r generated an exception: %s', full_file_path, exc)
         continue
