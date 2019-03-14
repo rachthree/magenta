@@ -26,6 +26,7 @@ Example usage:
 import os
 
 from magenta.music import abc_parser
+from magenta.music import chord_inference
 from magenta.music import midi_io
 from magenta.music import musicxml_reader
 from magenta.music import note_sequence_io
@@ -43,9 +44,11 @@ tf.app.flags.DEFINE_bool('recursive', False,
 tf.app.flags.DEFINE_string('log', 'INFO',
                            'The threshold for what messages will be logged '
                            'DEBUG, INFO, WARN, ERROR, or FATAL.')
+tf.app.flags.DEFINE_bool('add_chords', False,
+                          'Whether or not to annotate NoteSequences with chords.')
 
 
-def convert_files(root_dir, sub_dir, writer, recursive=False):
+def convert_files(root_dir, sub_dir, writer, recursive=False, add_chords=False):
   """Converts files.
 
   Args:
@@ -55,6 +58,8 @@ def convert_files(root_dir, sub_dir, writer, recursive=False):
     writer: A TFRecord writer
     recursive: A boolean specifying whether or not recursively convert files
         contained in subdirectories of the specified directory.
+    add_chords: A boolean specifying whether or not each NoteSequence should be
+        annotate with chords.
 
   Returns:
     A map from the resulting Futures to the file paths being converted.
@@ -72,6 +77,19 @@ def convert_files(root_dir, sub_dir, writer, recursive=False):
         full_file_path.lower().endswith('.midi')):
       try:
         sequence = convert_midi(root_dir, sub_dir, full_file_path)
+
+        if add_chords:
+          # Infer chords for every note (naive v0 approach for CS230 project)
+          try:
+            # TODO: add beats
+            chord_inference.infer_chords_for_sequence(
+                sequence,
+                chord_change_prob=0.25,
+                chord_note_concentration=50.0,
+                add_key_signatures=True)
+          except chord_inference.ChordInferenceError:
+            # Metrics.counter('extract_examples', 'chord_inference_failed').inc()
+            return
       except Exception as exc:  # pylint: disable=broad-except
         tf.logging.fatal('%r generated an exception: %s', full_file_path, exc)
         continue
@@ -103,7 +121,7 @@ def convert_files(root_dir, sub_dir, writer, recursive=False):
             'Unable to find a converter for file %s', full_file_path)
 
   for recurse_sub_dir in recurse_sub_dirs:
-    convert_files(root_dir, recurse_sub_dir, writer, recursive)
+    convert_files(root_dir, recurse_sub_dir, writer, recursive, add_chords)
 
 
 def convert_midi(root_dir, sub_dir, full_file_path):
@@ -198,7 +216,7 @@ def convert_abc(root_dir, sub_dir, full_file_path):
   return sequences
 
 
-def convert_directory(root_dir, output_file, recursive=False):
+def convert_directory(root_dir, output_file, recursive=False, add_chords=False):
   """Converts files to NoteSequences and writes to `output_file`.
 
   Input files found in `root_dir` are converted to NoteSequence protos with the
@@ -211,9 +229,11 @@ def convert_directory(root_dir, output_file, recursive=False):
     output_file: Path to TFRecord file to write results to.
     recursive: A boolean specifying whether or not recursively convert files
         contained in subdirectories of the specified directory.
+    add_chords: A boolean specifying whether or not each NoteSequence should be
+        annotate with chords.
   """
   with note_sequence_io.NoteSequenceRecordWriter(output_file) as writer:
-    convert_files(root_dir, '', writer, recursive)
+    convert_files(root_dir, '', writer, recursive, add_chords)
 
 
 def main(unused_argv):
@@ -233,7 +253,7 @@ def main(unused_argv):
   if output_dir:
     tf.gfile.MakeDirs(output_dir)
 
-  convert_directory(input_dir, output_file, FLAGS.recursive)
+  convert_directory(input_dir, output_file, FLAGS.recursive, FLAGS.add_chords)
 
 
 def console_entry_point():
