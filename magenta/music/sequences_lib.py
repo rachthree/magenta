@@ -86,6 +86,19 @@ class RectifyBeatsError(Exception):
   pass
 
 
+class TooManyUncertainChordsError(Exception):
+  """ Exception for when the threshold for the max number of unknown chords that
+  get inferred from the previous known chord is exceeded. This is used as a sort
+  of 'quality control' for this simple approach to chord annotation - a certain
+  number of conscutive 'unknown' chords is expected from looking at vertical
+  cross-sections of the music that contain many passing, non-chord (NC) tones,
+  but if this starts to ignore more complex chords, it'll incorrectly propagate
+  past seen chords. Note that this may cause pieces with long/fast chromatic runs
+  to consistently fail.
+  """
+  pass
+
+
 def trim_note_sequence(sequence, start_time, end_time):
   """Trim notes from a NoteSequence to lie within a specified time range.
 
@@ -1558,7 +1571,8 @@ def apply_sustain_control_changes(note_sequence, sustain_control_number=64):
 
 def infer_dense_chords_for_sequence(sequence,
                                     instrument=None,
-                                    min_notes_per_chord=3):
+                                    min_notes_per_chord=3,
+                                    max_repeated_chords=8):
   """Infers chords for a NoteSequence and adds them as TextAnnotations.
 
   For each set of simultaneously-active notes in a NoteSequence (optionally for
@@ -1612,17 +1626,40 @@ def infer_dense_chords_for_sequence(sequence,
   current_figure = constants.NO_CHORD
   active_notes = set()
 
+  # Counter to track the number of consecutive times figure gets set to
+  # current_figure when figure for the current set of notes can't be
+  # determined. It gets reset to 0 each time a new chord is seen.
+  num_repeated_chords = 0
+
   for time, idx, is_offset in events:
     if time > current_time:
       active_pitches = set(sorted_notes[idx].pitch for idx in active_notes)
       if len(active_pitches) >= min_notes_per_chord:
-        # Infer a chord symbol for the active pitches.
-        figure = chord_symbols_lib.pitches_to_simple_chord_symbol(active_pitches)
+        try:
+          # Infer a chord symbol for the active pitches. 
+          figure = chord_symbols_lib.pitches_to_simple_chord_symbol(active_pitches)
+        except:
+          if num_repeated_chords > max_repeated_chords:
+            raise TooManyUncertainChordsError(
+              'Too many chords guessed from previously known chord')
+          else:
+            # If unable to determine chord symbol from pitches, use previously
+            # inferred simple chord.
+            figure = current_figure
+            num_repeated_chords += 1
+        else:
+          # If the chord is too complicated, use the last inferred chord.
+          if figure == "":
+            if num_repeated_chords > max_repeated_chords:
+              raise TooManyUncertainChordsError(
+                'Too many chords guessed from previously known chord')
+            else:
+              figure = current_figure
+              num_repeated_chords += 1
+          else:
+            # If figure was set to a new simple chord, reset this counter.
+            num_repeated_chords = 0
 
-        # If the chord is too complicated, use the last seen chord that could be
-        # simply expressed.
-        if figure == "":
-          figure = current_figure
 
         # Add a text annotation to the sequence at each time change.
         text_annotation = sequence.text_annotations.add()

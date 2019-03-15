@@ -83,7 +83,6 @@ def convert_files(root_dir, sub_dir, writer, recursive=False, add_chords=False):
                                     sequence,
                                     instrument=None,
                                     min_notes_per_chord=3)
-          tf.logging.info('Adding chords 3')
       except Exception as exc:  # pylint: disable=broad-except
         tf.logging.fatal('%r generated an exception: %s', full_file_path, exc)
         continue
