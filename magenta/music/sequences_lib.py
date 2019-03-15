@@ -1631,6 +1631,9 @@ def infer_dense_chords_for_sequence(sequence,
   # determined. It gets reset to 0 each time a new chord is seen.
   num_repeated_chords = 0
 
+  total_num_chords_added = 0
+  distinct_num_chords_added = 0
+
   for time, idx, is_offset in events:
     if time > current_time:
       active_pitches = set(sorted_notes[idx].pitch for idx in active_notes)
@@ -1659,10 +1662,12 @@ def infer_dense_chords_for_sequence(sequence,
           else:
             # If figure was set to a new simple chord, reset this counter.
             num_repeated_chords = 0
+            distinct_num_chords_added += 1
 
 
         # Add a text annotation to the sequence at each time change.
         text_annotation = sequence.text_annotations.add()
+        total_num_chords_added += 1
         text_annotation.text = figure
         text_annotation.annotation_type = CHORD_SYMBOL
         if is_quantized_sequence(sequence):
@@ -1680,6 +1685,11 @@ def infer_dense_chords_for_sequence(sequence,
     else:
       active_notes.add(idx)
 
+  tf.logging.info(
+    'Added %d distinct chords and %d total chords.',
+    distinct_num_chords_added, 
+    total_num_chords_added)
+  
   assert not active_notes
 
 
