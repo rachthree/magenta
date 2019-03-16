@@ -88,6 +88,8 @@ def load_noteseqs(fp,
     velocities = np.array([note.velocity for note in note_sequence_ordered])
     start_times = np.array([note.start_time for note in note_sequence_ordered])
     end_times = np.array([note.end_time for note in note_sequence_ordered])
+    chord_roots = np.array([note.chord_root for note in note_sequence_ordered])
+    chord_qualities = np.array([note.chord_quality for note in note_sequence_ordered])
 
     # Tempo data augmentation
     if augment_stretch_bounds is not None:
@@ -103,7 +105,7 @@ def load_noteseqs(fp,
       delta_times = np.zeros_like(start_times)
 
     return note_sequence_str, np.stack(
-        [pitches, velocities, delta_times, start_times, end_times],
+        [pitches, velocities, delta_times, start_times, end_times, chord_roots, chord_qualities],
         axis=1).astype(np.float32)
 
   # Filter out excessively short examples
@@ -160,7 +162,8 @@ def load_noteseqs(fp,
 
   # Set shapes
   note_sequence_strs.set_shape([batch_size])
-  note_sequence_tensors.set_shape([batch_size, seq_len, 5])
+  # Update shape to (_, _, 7) w/ two extra  chord params
+  note_sequence_tensors.set_shape([batch_size, seq_len, 7])
 
   # Retrieve tensors
   note_pitches = tf.cast(note_sequence_tensors[:, :, 0] + 1e-4, tf.int32)
@@ -168,6 +171,8 @@ def load_noteseqs(fp,
   note_delta_times = note_sequence_tensors[:, :, 2]
   note_start_times = note_sequence_tensors[:, :, 3]
   note_end_times = note_sequence_tensors[:, :, 4]
+  note_chord_roots = note_sequence_tensors[:, :, 5]
+  note_chord_qualities = note_sequence_tensors[:, :, 6]
 
   # Onsets and frames model samples at 31.25Hz
   note_delta_times_int = tf.cast(
@@ -191,7 +196,9 @@ def load_noteseqs(fp,
       "delta_times": note_delta_times,
       "delta_times_int": note_delta_times_int,
       "start_times": note_start_times,
-      "end_times": note_end_times
+      "end_times": note_end_times,
+      "chord_roots": note_chord_roots,
+      "chord_qualities": note_chord_qualities
   }
 
   return note_tensors
