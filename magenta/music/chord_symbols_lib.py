@@ -725,7 +725,7 @@ def pitches_to_simple_chord_symbol(pitches):
   """Return a simplified tuple representation of the chord.
 
   Args:
-    figure: The chord symbol figure string for which quality is computed.
+    pitches: A python list of integer pitch values.
 
   Returns:
     Space-separated ints of the form "root quality", where root is a number from {0, 11}
@@ -739,4 +739,5 @@ def pitches_to_simple_chord_symbol(pitches):
   if quality == CHORD_QUALITY_OTHER:
     return ""
 
-  return (str(root) + " " + str(quality))
+  numerical_basic_chord = (str(root) + " " + str(quality))
+  return numerical_basic_chord

@@ -70,6 +70,11 @@ def convert_files(root_dir, sub_dir, writer, recursive=False, add_chords=False):
   files_in_dir = tf.gfile.ListDirectory(os.path.join(dir_to_convert))
   recurse_sub_dirs = []
   written_count = 0
+
+  # Counters for tracking how many files fail from chord annotation
+  chords_success = 0
+  chords_failure = 0
+
   for file_in_dir in files_in_dir:
     tf.logging.log_every_n(tf.logging.INFO, '%d files converted.',
                            1000, written_count)
@@ -79,10 +84,16 @@ def convert_files(root_dir, sub_dir, writer, recursive=False, add_chords=False):
       try:
         sequence = convert_midi(root_dir, sub_dir, full_file_path)
         if add_chords:
-          sequences_lib.infer_dense_chords_for_sequence(
-                                    sequence,
-                                    instrument=None,
-                                    min_notes_per_chord=3)
+          try:
+            sequences_lib.infer_dense_chords_for_sequence(
+                                      sequence,
+                                      instrument=None,
+                                      min_notes_per_chord=3)
+          except:
+            chords_failure += 1
+            # Raise exception
+          else:
+            chords_success += 1
       except Exception as exc:  # pylint: disable=broad-except
         tf.logging.fatal('%r generated an exception: %s', full_file_path, exc)
         continue
@@ -112,6 +123,10 @@ def convert_files(root_dir, sub_dir, writer, recursive=False, add_chords=False):
       else:
         tf.logging.warning(
             'Unable to find a converter for file %s', full_file_path)
+
+  if add_chords:
+    tf.logging.info('Converted %d out of %d total NoteSequences w/ chords', 
+      chords_success, (chords_success+chords_failure))
 
   for recurse_sub_dir in recurse_sub_dirs:
     convert_files(root_dir, recurse_sub_dir, writer, recursive, add_chords)

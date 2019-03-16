@@ -1572,7 +1572,7 @@ def apply_sustain_control_changes(note_sequence, sustain_control_number=64):
 def infer_dense_chords_for_sequence(sequence,
                                     instrument=None,
                                     min_notes_per_chord=3,
-                                    max_repeated_chords=8):
+                                    max_repeated_chords=40):
   """Infers chords for a NoteSequence and adds them as TextAnnotations.
 
   For each set of simultaneously-active notes in a NoteSequence (optionally for
@@ -1634,6 +1634,8 @@ def infer_dense_chords_for_sequence(sequence,
   total_num_chords_added = 0
   distinct_num_chords_added = 0
 
+  # TODO(steinviolin): if the very first chord can't be determined, don't propagate
+  # constants.NO_CHORD but instead crop off the beginning of the NoteSequence or fail.
   for time, idx, is_offset in events:
     if time > current_time:
       active_pitches = set(sorted_notes[idx].pitch for idx in active_notes)
@@ -1644,25 +1646,25 @@ def infer_dense_chords_for_sequence(sequence,
         except:
           if num_repeated_chords > max_repeated_chords:
             raise TooManyUncertainChordsError(
-              'Too many chords guessed from previously known chord')
+              'Too many chords guessed from previously known chord - unknown chord')
           else:
             # If unable to determine chord symbol from pitches, use previously
             # inferred simple chord.
             figure = current_figure
             num_repeated_chords += 1
-        else:
-          # If the chord is too complicated, use the last inferred chord.
-          if figure == "":
-            if num_repeated_chords > max_repeated_chords:
-              raise TooManyUncertainChordsError(
-                'Too many chords guessed from previously known chord')
-            else:
-              figure = current_figure
-              num_repeated_chords += 1
+
+        # If the chord is too complicated, use the last inferred chord.
+        if figure == "":
+          if num_repeated_chords > max_repeated_chords:
+            raise TooManyUncertainChordsError(
+              'Too many chords guessed from previously known chord - complex chord')
           else:
-            # If figure was set to a new simple chord, reset this counter.
-            num_repeated_chords = 0
-            distinct_num_chords_added += 1
+            figure = current_figure
+            num_repeated_chords += 1
+        else:
+          # If figure was set to a new simple chord, reset this counter.
+          num_repeated_chords = 0
+          distinct_num_chords_added += 1
 
 
         # Add a text annotation to the sequence at each time change.
@@ -1689,7 +1691,7 @@ def infer_dense_chords_for_sequence(sequence,
     'Added %d distinct chords and %d total chords.',
     distinct_num_chords_added, 
     total_num_chords_added)
-  
+
   assert not active_notes
 
 
