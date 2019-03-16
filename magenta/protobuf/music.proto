@@ -97,7 +97,7 @@ message NoteSequence {
   // Sequence metadata.
   SequenceMetadata sequence_metadata = 19;
 
-  // Next tag: 15
+  // Next tag: 17
   message Note {
     // MIDI pitch; see en.wikipedia.org/wiki/MIDI_Tuning_Standard for details.
     int32 pitch = 1;
@@ -139,6 +139,13 @@ message NoteSequence {
     // Note that while voices indexes must be unique within a part, they are not
     // guaranteed to be unique across parts.
     int32 voice = 12;
+
+    // For CS230 project:
+    // The root pitch of the inferred chord for this note.
+    int32 chord_root = 15;
+    // The quality (0 = major, 1 = minor, 2 = augmented, 3 = diminished) of 
+    // the inferred chord for this note.
+    int32 chord_quality = 16;
   }
 
   // Adopted from Musescore with start enum shifted to 0; see
