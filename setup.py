@@ -52,9 +52,9 @@ REQUIRED_PACKAGES = [
     'python-rtmidi >= 1.1, < 1.2',  # 1.2 breaks us
     'scipy >= 0.18.1, <= 1.2.0',  # 1.2.1 causes segfaults in pytest.
     'sk-video',
-    'sonnet',
+    'dm-sonnet',
     'sox >= 1.3.7',
-    'tensorflow-probability >= 0.5.0',
+    'tensorflow-probability == 0.5.0',
     'tensor2tensor >= 1.10.0',
     'wheel',
     'futures;python_version=="2.7"',
@@ -62,9 +62,9 @@ REQUIRED_PACKAGES = [
 ]
 
 if gpu_mode:
-  REQUIRED_PACKAGES.append('tensorflow-gpu >= 1.12.0')
+  REQUIRED_PACKAGES.append('tensorflow-gpu == 1.12')
 else:
-  REQUIRED_PACKAGES.append('tensorflow >= 1.12.0')
+  REQUIRED_PACKAGES.append('tensorflow == 1.12')
 
 # pylint:disable=line-too-long
 CONSOLE_SCRIPTS = [
