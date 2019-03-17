@@ -188,6 +188,11 @@ def load_noteseqs(fp,
         note_velocities / (128 // max_discrete_velocities),
         max_discrete_velocities)
 
+  # Create chord dict - temp workaround
+  ROOTS = list(range(12))
+  QUALS = list(range(4))
+  chord_dict = {"roots": ROOTS, "quals": QUALS}
+
   # Build return dict
   note_tensors = {
       "pb_strs": note_sequence_strs,
@@ -198,7 +203,8 @@ def load_noteseqs(fp,
       "start_times": note_start_times,
       "end_times": note_end_times,
       "chord_roots": note_chord_roots,
-      "chord_qualities": note_chord_qualities
+      "chord_qualities": note_chord_qualities,
+      "chord_dict": chord_dict
   }
 
   return note_tensors

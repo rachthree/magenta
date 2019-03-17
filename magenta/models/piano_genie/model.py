@@ -137,45 +137,56 @@ def build_genie_model(feat_dict,
   pitches_scalar = ((tf.cast(pitches, tf.float32) / 87.) * 2.) - 1.
   
   # CS230 Update
-  # Initialize chord tables
+
   if ("chordprog" in cfg.enc_aux_feats) or ("chordprog" in cfg.dec_aux_feats):
-    chord_keys = feat_dict["chord_dict"]["PITCH_CLASS_NAMES"]
-    chord_types = feat_dict["chord_dict"]["CHORD_KINDS"]
+    # chord_root_list = feat_dict["chord_dict"]["roots"]
+    # chord_qual_list = feat_dict["chord_dict"]["quals"]
+    # #  Initialize chord tables
+    # table_chord_roots = tf.contrib.lookup.HashTable(
+    #         tf.contrib.lookup.KeyValueTensorInitializer(chord_root_list,
+    #                                 tf.range(0, len(chord_root_list))),
+    #                                 default_value=0, name='roots')
+    # table_chord_quals= tf.contrib.lookup.HashTable(
+    #         tf.contrib.lookup.KeyValueTensorInitializer(chord_qual_list,
+    #                                 tf.range(0, len(chord_qual_list))),
+    #                                 default_value=0, name='chordquals')
+    # tf.tables_initializer().run()
     
-    table_chord_keys = tf.contrib.lookup.HashTable(
-            tf.contrib.lookup.KeyValueTensorInitializer(chord_keys,
-                                    tf.range(0, len(chord_keys))),
-                                    default_value = 0, name = 'chordkeys')
-    table_chord_types = tf.contrib.lookup.HashTable(
-            tf.contrib.lookup.KeyValueTensorInitializer(chord_types,
-                                    tf.range(0, len(chord_types))),
-                                    default_value = 0, name = 'chordtypes')
-    tf.tables_initializer().run()
-    
-    # CS230 Update
-    def chordsOneHot(features, table_chord_keys, table_chord_types):
+
+    def chordsOneHot(features):
+                             #, table_chord_roots, table_chord_quals):
       # Takes chord data in features and applies one-hot enconding
       # Inputs:
       #   features: features from load_noteseqs(...)
-      #   table_chord_keys: table linking chord keys to integers
-      #   table_chord_types: table linking chord types to integers
+      #   (deprecated) table_chord_roots: table linking chord roots to integers (strings were used for features)
+      #   (deprecated) table_chord_quals: table linking chord quals to integers (strings were used for features)
       #
       # Outputs:
-      #   One-hot-conded tensor of [feats_chord_keys, feats_chord_types]
+      #   One-hot-encoded tensor of [feats_chord_keys, feats_chord_types]
+      #   NO_CHORD is assigned -1, -1, which results in zeros for one-hot encoding
       
-      chord_keys = features["chord_dict"]["PITCH_CLASS_NAMES"]
-      chord_types = features["chord_dict"]["CHORD_KINDS"]
-      chord_features = features["chords"] # tuple per note per example is
-                                          # ('key', 'type')
-      chord_keys_onehot = tf.one_hot(table_chord_keys.lookup(
-                                     chord_features[:,:,0]),
-                                     depth = len(chord_keys) + 1)
-      chord_types_onehot = tf.one_hot(table_chord_types.lookup(
-                                      chord_features[:,:,1]),
-                                      depth = len(chord_types) + 1)
-      
-      return chord_keys_onehot.append(chord_types_onehot)
-  
+      chord_root_list = features["chord_dict"]["roots"]
+      chord_qual_list = features["chord_dict"]["quals"]
+
+      chord_roots_note = features["chord_roots"]
+      chord_qual_note = features["chord_qualities"]
+
+      # chord_keys_onehot = tf.one_hot(table_chord_roots.lookup(
+      #                                chord_roots_note[:, :]),
+      #                                depth=len(chord_root_list))
+      # chord_types_onehot = tf.one_hot(table_chord_quals.lookup(
+      #                                 chord_qual_note[:, :]),
+      #                                 depth=len(chord_qual_list))
+
+      # Roots and Quals are already represented by integers
+      chord_roots_onehot = tf.one_hot(tf.cast(chord_roots_note, dtype=tf.int32), depth=len(chord_root_list))
+      chord_quals_onehot = tf.one_hot(tf.cast(chord_qual_note, dtype=tf.int32), depth=len(chord_qual_list))
+
+      chords_onehot_dict = {"roots": chord_roots_onehot, "quals": chord_quals_onehot}
+
+      return chords_onehot_dict
+  # End CS230 Update
+
   # Create sequence lens
   if is_training and cfg.train_randomize_seq_len:
     seq_lens = tf.random_uniform(
@@ -213,9 +224,11 @@ def build_genie_model(feat_dict,
     
     # CS230 Update
     if "chordprog" in cfg.enc_aux_feats:
-      enc_feats.append(
-          chordsOneHot(feat_dict, table_chord_keys, table_chord_types))
-    
+      chords_onehot_dict = chordsOneHot(feat_dict)
+      enc_feats.append(chords_onehot_dict["roots"])
+      enc_feats.append(chords_onehot_dict["quals"])
+    # End CS230 Update
+
     enc_feats = tf.concat(enc_feats, axis=2)
 
     with tf.variable_scope("encoder"):
@@ -471,8 +484,10 @@ def build_genie_model(feat_dict,
                    cfg.data_max_discrete_velocities + 1))
   # CS230 Update
   if "chordprog" in cfg.dec_aux_feats:
-      enc_feats.append(
-          chordsOneHot(feat_dict, table_chord_keys, table_chord_types))
+      chords_onehot_dict = chordsOneHot(feat_dict)
+      dec_feats.append(chords_onehot_dict["roots"])
+      dec_feats.append(chords_onehot_dict["quals"])
+  # End CS230 Update
 
   assert dec_feats
   dec_feats = tf.concat(dec_feats, axis=2)
