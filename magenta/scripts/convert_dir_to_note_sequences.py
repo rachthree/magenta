@@ -47,9 +47,12 @@ tf.app.flags.DEFINE_string('log', 'INFO',
                            'DEBUG, INFO, WARN, ERROR, or FATAL.')
 tf.app.flags.DEFINE_bool('add_chords', False,
                           'Whether or not to annotate NoteSequences with chords.')
+tf.app.flags.DEFINE_integer('max_repeated_chords', 30,
+                          'Limit on how many consecutive times a chord can be inferred'
+                          ' from the last seen "real" chord.')
 
 
-def convert_files(root_dir, sub_dir, writer, recursive=False, add_chords=False):
+def convert_files(root_dir, sub_dir, writer, recursive=False, add_chords=False, max_repeated_chords=30):
   """Converts files.
 
   Args:
@@ -61,6 +64,8 @@ def convert_files(root_dir, sub_dir, writer, recursive=False, add_chords=False):
         contained in subdirectories of the specified directory.
     add_chords: A boolean specifying whether or not each NoteSequence should be
         annotate with chords.
+    max_repeated_chords: Limit on how many consecutive times a chord can be inferred
+        from the last seen "real" chord
 
   Returns:
     A map from the resulting Futures to the file paths being converted.
@@ -86,9 +91,10 @@ def convert_files(root_dir, sub_dir, writer, recursive=False, add_chords=False):
         if add_chords:
           try:
             sequences_lib.infer_dense_chords_for_sequence(
-                                      sequence,
-                                      instrument=None,
-                                      min_notes_per_chord=3)
+                                    sequence,
+                                    instrument=None,
+                                    min_notes_per_chord=3,
+                                    max_repeated_chords=max_repeated_chords)
           except:
             chords_failure += 1
             raise Exception('Unable to infer chords.')
@@ -224,7 +230,7 @@ def convert_abc(root_dir, sub_dir, full_file_path):
   return sequences
 
 
-def convert_directory(root_dir, output_file, recursive=False, add_chords=False):
+def convert_directory(root_dir, output_file, recursive=False, add_chords=False, max_repeated_chords=30):
   """Converts files to NoteSequences and writes to `output_file`.
 
   Input files found in `root_dir` are converted to NoteSequence protos with the
@@ -261,7 +267,8 @@ def main(unused_argv):
   if output_dir:
     tf.gfile.MakeDirs(output_dir)
 
-  convert_directory(input_dir, output_file, FLAGS.recursive, FLAGS.add_chords)
+  convert_directory(input_dir, output_file, FLAGS.recursive,
+    FLAGS.add_chords, FLAGS.max_repeated_chords)
 
 
 def console_entry_point():
