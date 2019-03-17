@@ -91,7 +91,7 @@ def convert_files(root_dir, sub_dir, writer, recursive=False, add_chords=False):
                                       min_notes_per_chord=3)
           except:
             chords_failure += 1
-            # Raise exception
+            raise Exception('Unable to infer chords.')
           else:
             chords_success += 1
       except Exception as exc:  # pylint: disable=broad-except

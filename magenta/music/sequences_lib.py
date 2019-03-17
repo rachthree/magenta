@@ -1572,7 +1572,8 @@ def apply_sustain_control_changes(note_sequence, sustain_control_number=64):
 def infer_dense_chords_for_sequence(sequence,
                                     instrument=None,
                                     min_notes_per_chord=3,
-                                    max_repeated_chords=40):
+                                    max_repeated_chords=40,
+                                    add_chords_to_notes=True):
   """Infers chords for a NoteSequence and adds them as TextAnnotations.
 
   For each set of simultaneously-active notes in a NoteSequence (optionally for
@@ -1623,8 +1624,9 @@ def infer_dense_chords_for_sequence(sequence,
   events = sorted(onsets + offsets)
 
   current_time = 0
-  current_figure = constants.NO_CHORD
+  current_figure = (-1, -1) # representation of constants.NO_CHORD
   active_notes = set()
+  active_unannotated_notes = set()
 
   # Counter to track the number of consecutive times figure gets set to
   # current_figure when figure for the current set of notes can't be
@@ -1654,7 +1656,7 @@ def infer_dense_chords_for_sequence(sequence,
             num_repeated_chords += 1
 
         # If the chord is too complicated, use the last inferred chord.
-        if figure == "":
+        if figure == (-1, -1):
           if num_repeated_chords > max_repeated_chords:
             raise TooManyUncertainChordsError(
               'Too many chords guessed from previously known chord - complex chord')
@@ -1666,18 +1668,28 @@ def infer_dense_chords_for_sequence(sequence,
           num_repeated_chords = 0
           distinct_num_chords_added += 1
 
-
-        # Add a text annotation to the sequence at each time change.
-        text_annotation = sequence.text_annotations.add()
         total_num_chords_added += 1
-        text_annotation.text = figure
-        text_annotation.annotation_type = CHORD_SYMBOL
-        if is_quantized_sequence(sequence):
-          text_annotation.time = (
-              current_time * sequence.quantization_info.steps_per_quarter)
-          text_annotation.quantized_step = current_time
+
+        if add_chords_to_notes:
+          # Also add chord info the actual notes (for CS230) only for notes that haven't yet
+          # been annotated. Thus, build up this set in the same place where active_notes is
+          # added to, but clear it each time the notes in it are annotated.
+          for i in active_unannotated_notes:
+            root, quality = figure
+            sorted_notes[i].chord_root = root
+            sorted_notes[i].chord_quality = quality
+          active_unannotated_notes.clear()
         else:
-          text_annotation.time = current_time
+          # Add a text annotation to the sequence at each time change.
+          text_annotation = sequence.text_annotations.add()
+          text_annotation.text = figure
+          text_annotation.annotation_type = CHORD_SYMBOL
+          if is_quantized_sequence(sequence):
+            text_annotation.time = (
+                current_time * sequence.quantization_info.steps_per_quarter)
+            text_annotation.quantized_step = current_time
+          else:
+            text_annotation.time = current_time
 
         current_figure = figure
 
@@ -1686,6 +1698,7 @@ def infer_dense_chords_for_sequence(sequence,
       active_notes.remove(idx)
     else:
       active_notes.add(idx)
+      active_unannotated_notes.add(idx)
 
   tf.logging.info(
     'Added %d distinct chords and %d total chords.',

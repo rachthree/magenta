@@ -728,16 +728,15 @@ def pitches_to_simple_chord_symbol(pitches):
     pitches: A python list of integer pitch values.
 
   Returns:
-    Space-separated ints of the form "root quality", where root is a number from {0, 11}
+    Int tuple of the form (root, quality), where root is a number from {0, 11}
     and quality is 0 = major, 1 = minor, 2 = augmented, 3 = diminished. If the quality
-    is of unknown type (something more complex or undetermined), return empty string.
+    is of unknown type (something more complex or undetermined), return NO_CHORD.
   """
   chord = pitches_to_chord_symbol(pitches)
 
   root = chord_symbol_root(chord)
   quality = chord_symbol_quality(chord)
   if quality == CHORD_QUALITY_OTHER:
-    return ""
+    return (-1, -1)
 
-  numerical_basic_chord = (str(root) + " " + str(quality))
-  return numerical_basic_chord
+  return (root, quality)
