@@ -4,6 +4,55 @@
 [![Build Status](https://travis-ci.org/tensorflow/magenta.svg?branch=master)](https://travis-ci.org/tensorflow/magenta)
  [![PyPI version](https://badge.fury.io/py/magenta.svg)](https://badge.fury.io/py/magenta)
 
+## Introduction
+This fork of Magenta is for the Stanford University CS230, Winter 2019 Project. The project aims to modify Piano Genie to take in a chord progression and button contour to provide a more musically structured output.
+
+
+## Modified Code
+
+New and modified Magenta code are linked below:
+
+[Setup](/magenta/setup.py) - Avoids TensorFlow 2.0 conflicts and ensures the right versions of packages are installed.
+
+[Model configurations](/magenta/models/piano_genie/configs.py) - added IQAE + delta time and IQAE + delta time + chord configurations. Other parameters changed to match what was done for the [baseline IQAE + delta time model](https://arxiv.org/pdf/1810.05246.pdf).
+
+[Model](/magenta/models/piano_genie/model.py) - added the new configurations and capability to include chord progression features.
+
+[Training](/magenta/models/piano_genie/train.py) - proposed model is now default.
+
+[Music protobuf](/magenta/protobuf/music_pb2.py)
+
+[Chord symbols library](/magenta/music/chord_symbols_lib.py)
+
+[Sequences library](/magenta/music/sequences_lib.py)
+
+[MIDI to TF record reader](/magenta/scripts/convert_dir_to_note_sequences.py) - Modified to ensure alignment with proposed methodology regarding chord progressions.
+
+[TF record reader](/magenta/models/piano_genie/loader.py) - Modified to provide the information model.py needs.
+
+## Instructions
+For development:
+
+It is highly recommended to use TensorFlow GPU (pip install tensorflow-gpu) when possible. Magenta will use whatever version of TensorFlow is installed in your Python environment.
+
+Clone this fork, and while in the main Magenta direcotry, execute the following setup command:
+
+```bash
+python setup.py develop
+```
+
+This will allow you to develop in the directory where you cloned this fork without needing to go into the site-packages folder in your Python environment. Use the --gpu option to install TensorFlow GPU. A link will be created in site-packages instead. 
+
+For installation into site-packages:
+
+```bash
+python setup.py install
+```
+
+Likewise, use the --gpu option to install TensorFlow GPU. If you want to use the Piano Genie updates, "pip install magenta" cannot be used as this will pull from the official repo.
+
+
+
 **Magenta** is a research project exploring the role of machine learning
 in the process of creating art and music.  Primarily this
 involves developing new deep learning and reinforcement learning
