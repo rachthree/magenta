@@ -1,10 +1,4 @@
-
-<img src="magenta-logo-bg.png" height="75">
-
-[![Build Status](https://travis-ci.org/tensorflow/magenta.svg?branch=master)](https://travis-ci.org/tensorflow/magenta)
- [![PyPI version](https://badge.fury.io/py/magenta.svg)](https://badge.fury.io/py/magenta)
-
-## Introduction
+## Introduction (Stanford CS230)
 This fork of Magenta is for the Stanford University CS230, Winter 2019 Project. The project aims to modify Piano Genie to take in a chord progression and button contour to provide a more musically structured output.
 
 
@@ -52,7 +46,14 @@ python setup.py install
 Likewise, use the --gpu option to install TensorFlow GPU. If you want to use the Piano Genie updates, "pip install magenta" cannot be used as this will pull from the official repo.
 
 
+## Introduction (copied from official Magenta repo)
 
+<img src="magenta-logo-bg.png" height="75">
+
+[![Build Status](https://travis-ci.org/tensorflow/magenta.svg?branch=master)](https://travis-ci.org/tensorflow/magenta)
+ [![PyPI version](https://badge.fury.io/py/magenta.svg)](https://badge.fury.io/py/magenta)
+ 
+ 
 **Magenta** is a research project exploring the role of machine learning
 in the process of creating art and music.  Primarily this
 involves developing new deep learning and reinforcement learning
